@@ -29,3 +29,9 @@ jobs:
 
       - name: Test du backend Vercel KV (client simulé, sans réseau)
         run: node tests/kv-store.test.js
+
+      - name: Build + smoke test de l'app RH Mali (TypeScript, mode mock)
+        run: |
+          cd rh-mali-chat
+          npm ci
+          npm test

@@ -1,5 +1,3 @@
-const socket = io();
-
 let myName = localStorage.getItem('tc_name') || '';
 if (!myName) {
   myName = (prompt('Ton pseudo ?') || 'Anonyme').trim() || 'Anonyme';
@@ -8,6 +6,8 @@ if (!myName) {
 
 let channels = [];
 let currentChannel = null;
+let lastTs = 0;
+let pendingAgent = false;
 
 const channelsEl = document.getElementById('channels');
 const messagesEl = document.getElementById('messages');
@@ -53,6 +53,9 @@ function appendMessage(msg) {
   div.append(meta, body);
   messagesEl.appendChild(div);
   messagesEl.scrollTop = messagesEl.scrollHeight;
+  if (msg.ts > lastTs) lastTs = msg.ts;
+  if (msg.kind !== 'user') pendingAgent = false;
+  typingEl.classList.toggle('hidden', !pendingAgent);
 }
 
 async function renderChannels() {
@@ -78,9 +81,21 @@ async function renderChannels() {
   }
 }
 
+async function poll() {
+  if (!currentChannel) return;
+  try {
+    const res = await fetch(`/api/channels/${currentChannel}/messages?since=${lastTs}&limit=200`);
+    if (!res.ok) return;
+    const messages = await res.json();
+    for (const m of messages) appendMessage(m);
+  } catch { /* réseau indisponible, on réessaiera au prochain cycle */ }
+}
+
 async function selectChannel(id) {
   currentChannel = id;
-  socket.emit('join', id);
+  lastTs = 0;
+  pendingAgent = false;
+  typingEl.classList.add('hidden');
   const res = await fetch(`/api/channels/${id}/messages?limit=200`);
   const messages = await res.json();
   messagesEl.innerHTML = '';
@@ -92,22 +107,32 @@ async function selectChannel(id) {
   input.focus();
 }
 
-socket.on('message:new', (msg) => {
-  if (msg.channelId === currentChannel) appendMessage(msg);
-});
-
-socket.on('channel:new', () => renderChannels());
-
-socket.on('agent:typing', ({ channelId, on }) => {
-  if (channelId === currentChannel) typingEl.classList.toggle('hidden', !on);
-});
-
-composer.addEventListener('submit', (e) => {
+composer.addEventListener('submit', async (e) => {
   e.preventDefault();
   const text = input.value.trim();
   if (!text || !currentChannel) return;
-  socket.emit('message:send', { channelId: currentChannel, author: myName, text });
   input.value = '';
+  const channel = channels.find((c) => c.id === currentChannel);
+  const shouldAsk = channel && (channel.type === 'agent' || /@agent\b/i.test(text));
+  if (shouldAsk) {
+    pendingAgent = true;
+    typingEl.classList.remove('hidden');
+  }
+  try {
+    const res = await fetch(`/api/channels/${currentChannel}/messages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ author: myName, text }),
+    });
+    if (!res.ok) throw new Error('envoi échoué');
+    const { message, agentReply } = await res.json();
+    appendMessage(message);
+    if (agentReply) appendMessage(agentReply);
+  } catch {
+    pendingAgent = false;
+    typingEl.classList.add('hidden');
+    alert('Impossible d’envoyer le message');
+  }
   input.focus();
 });
 
@@ -134,5 +159,6 @@ newChannelForm.addEventListener('submit', async (e) => {
 (async () => {
   await renderChannels();
   const first = channels.find((c) => c.type === 'chat') || channels[0];
-  if (first) selectChannel(first.id);
+  if (first) await selectChannel(first.id);
+  setInterval(poll, 2000);
 })();

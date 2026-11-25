@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Assistant RH Mali</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="chat">
+      <header>
+        <h1>Assistant RH Mali</h1>
+        <p>RH &amp; droit du travail malien — Mistral (<span id="model">mistral-small-latest</span>)</p>
+      </header>
+      <div id="messages" class="messages" aria-live="polite"></div>
+      <form id="composer">
+        <input
+          id="input"
+          type="text"
+          placeholder="Posez votre question sur la RH au Mali (contrat, congés, durée du travail, rupture…)"
+          autocomplete="off"
+          required
+        />
+        <button type="submit" id="send">Envoyer</button>
+      </form>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>

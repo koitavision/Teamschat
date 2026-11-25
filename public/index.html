@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Team Chat</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <aside id="sidebar">
+      <div class="sidebar-header">
+        <h1>Team Chat</h1>
+        <button id="edit-name" title="Changer de pseudo">✏️</button>
+      </div>
+      <div class="me">Connecté en tant que <strong id="me"></strong></div>
+      <div class="channels-title">Salons</div>
+      <ul id="channels"></ul>
+      <form id="new-channel">
+        <input id="new-channel-name" placeholder="+ nouveau salon" maxlength="40" autocomplete="off" />
+      </form>
+    </aside>
+    <main id="main">
+      <header id="main-header">
+        <span id="channel-name">—</span>
+        <span id="channel-badge"></span>
+      </header>
+      <div id="messages"></div>
+      <div id="typing" class="hidden">L'agent écrit…</div>
+      <form id="composer">
+        <input id="input" placeholder="Écris un message… (@agent pour interpeller l'agent)" autocomplete="off" maxlength="4000" />
+        <button type="submit">Envoyer</button>
+      </form>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

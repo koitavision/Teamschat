@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - "vibe/*"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Installation des dépendances
+        run: npm ci
+
+      - name: Smoke test (agent en mode mock, sans clé API)
+        run: |
+          AGENT_MOCK=1 PORT=3000 node server.js &
+          sleep 2
+          node tests/smoke.js
+
+      - name: Test du backend Vercel KV (client simulé, sans réseau)
+        run: node tests/kv-store.test.js
+
+      - name: Build + smoke test de l'app RH Mali (TypeScript, mode mock)
+        run: |
+          cd rh-mali-chat
+          npm ci
+          npm test

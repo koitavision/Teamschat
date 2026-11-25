@@ -30,7 +30,7 @@ Test sans clé API : `AGENT_MOCK=1 npm start` (l'agent répond par un message fi
 
 Notes :
 - La clé API reste côté serveur (variable d'environnement, jamais dans le code ni dans le front).
-- Sur Vercel, les messages sont écrits dans `/tmp` : ils persistent tant que la fonction reste « chaude », mais peuvent être perdus lors d'un redémarrage. Pour une persistance durable, brancher une base Vercel (KV/Postgres) via `DATA_DIR`/le store.
+- **Persistance durable** : dans le dashboard Vercel, onglet **Storage → Create Database → KV**, puis connecte-la au projet : les variables `KV_REST_API_URL` et `KV_REST_API_TOKEN` sont injectées automatiquement et l'app stocke alors salons + messages dans Redis (les 2000 derniers messages par salon sont conservés). Sans KV, sur Vercel l'app écrit dans `/tmp` (perdu au redémarrage à froid) ; en local elle écrit dans `data/`.
 - Le front interroge le serveur toutes les 2 s (`GET /api/channels/:id/messages?since=...`) : pas de WebSocket, ce que Vercel ne supporte pas en serverless.
 
 ## Structure

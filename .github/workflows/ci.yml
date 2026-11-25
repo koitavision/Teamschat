@@ -26,3 +26,6 @@ jobs:
           AGENT_MOCK=1 PORT=3000 node server.js &
           sleep 2
           node tests/smoke.js
+
+      - name: Test du backend Vercel KV (client simulé, sans réseau)
+        run: node tests/kv-store.test.js
